@@ -81,4 +81,4 @@ expense-tracker/
 See `docs/ARCHITECTURE.md` for design decisions and `docs/USER_GUIDE.md` for all commands.
 
 ## Author
-[Your Name]
+Kshitij Gupta
