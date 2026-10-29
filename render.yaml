@@ -1,0 +1,37 @@
+# Render Blueprint: two services built from the Dockerfile, one per environment.
+# Create with: Render dashboard -> New -> Blueprint -> select this repository.
+# API_KEY has sync:false, so Render asks you to type it during setup (it is never stored in Git).
+services:
+  - type: web
+    name: expense-tracker-staging
+    runtime: docker
+    branch: staging
+    plan: free
+    healthCheckPath: /health
+    autoDeploy: false          # the GitHub Actions pipeline triggers deploys after tests pass
+    envVars:
+      - key: APP_ENV
+        value: staging
+      - key: LOG_LEVEL
+        value: INFO
+      - key: DB_PATH
+        value: /tmp/expenses.db   # free plan has no persistent disk: data is lost on restart
+      - key: API_KEY
+        sync: false
+
+  - type: web
+    name: expense-tracker-production
+    runtime: docker
+    branch: main
+    plan: free
+    healthCheckPath: /health
+    autoDeploy: false
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: DB_PATH
+        value: /tmp/expenses.db   # use a persistent disk (paid plan) + /data/expenses.db for real data
+      - key: API_KEY
+        sync: false

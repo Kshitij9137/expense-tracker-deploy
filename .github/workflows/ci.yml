@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-dev.txt
+      - name: Run tests with coverage (fails below 90%)
+        env:
+          PYTHONPATH: src
+        run: |
+          coverage run --branch --source=src/expense_tracker -m unittest discover -s tests
+          coverage report -m --fail-under=90
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the production image
+        run: docker build -t expense-tracker:ci .
+      - name: Container smoke test (start the image and call /health)
+        run: |
+          docker run -d --name et -p 8000:8000 -e APP_ENV=staging -e API_KEY=ci-test-api-key-123456 expense-tracker:ci
+          python3 scripts/smoke_test.py http://127.0.0.1:8000 --api-key ci-test-api-key-123456 --wait 60 || { docker logs et; exit 1; }

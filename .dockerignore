@@ -1,0 +1,14 @@
+.git
+.github
+__pycache__
+*.pyc
+*.db
+*.db-wal
+*.db-shm
+*.csv
+.env
+.vscode
+tests
+docs
+tools
+.coverage

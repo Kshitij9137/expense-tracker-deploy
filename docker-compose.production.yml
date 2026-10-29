@@ -1,0 +1,22 @@
+services:
+  app:
+    image: expense-tracker:${IMAGE_TAG:-latest}
+    container_name: expense-tracker-production
+    environment:
+      APP_ENV: production
+      API_KEY: ${PRODUCTION_API_KEY:?set PRODUCTION_API_KEY}
+      LOG_LEVEL: INFO
+      DB_PATH: /data/expenses.db
+    ports:
+      - "8002:8000"
+    volumes:
+      - production-data:/data
+    restart: unless-stopped
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "5"}
+volumes:
+  production-data:

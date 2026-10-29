@@ -1,0 +1,56 @@
+name: Deploy
+
+# staging branch  -> deploy to STAGING, then smoke test
+# main branch     -> deploy to PRODUCTION (can require manual approval), then smoke test
+on:
+  push:
+    branches: [main, staging]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - name: Test gate
+        env: {PYTHONPATH: src}
+        run: |
+          coverage run --branch --source=src/expense_tracker -m unittest discover -s tests
+          coverage report --fail-under=90
+
+  deploy-staging:
+    if: github.ref_name == 'staging'
+    needs: tests
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trigger staging deploy (Render deploy hook)
+        run: curl -fsS -X POST "${{ secrets.STAGING_DEPLOY_HOOK }}"
+      - name: Smoke test staging
+        run: python3 scripts/smoke_test.py "${{ secrets.STAGING_URL }}" --api-key "${{ secrets.STAGING_API_KEY }}" --wait 300
+
+  deploy-production:
+    if: github.ref_name == 'main'
+    needs: tests
+    runs-on: ubuntu-latest
+    environment: production        # add "required reviewers" to this environment for a manual approval gate
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify staging is healthy before touching production
+        run: python3 scripts/smoke_test.py "${{ secrets.STAGING_URL }}" --api-key "${{ secrets.STAGING_API_KEY }}" --wait 300
+      - name: Trigger production deploy (Render deploy hook)
+        run: curl -fsS -X POST "${{ secrets.PRODUCTION_DEPLOY_HOOK }}"
+      - name: Smoke test production
+        run: python3 scripts/smoke_test.py "${{ secrets.PRODUCTION_URL }}" --api-key "${{ secrets.PRODUCTION_API_KEY }}" --wait 300
+      - name: Report failure (rollback instructions)
+        if: failure()
+        run: |
+          echo "::error::Production smoke test failed. Roll back: Render dashboard -> expense-tracker-production -> Events -> Rollback to the previous deploy. See docs/RUNBOOK.md"

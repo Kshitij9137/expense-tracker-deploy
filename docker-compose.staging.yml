@@ -1,0 +1,23 @@
+# Staging: an exact replica of production (same image, same settings) on a different port and data volume.
+services:
+  app:
+    image: expense-tracker:${IMAGE_TAG:-latest}
+    container_name: expense-tracker-staging
+    environment:
+      APP_ENV: staging
+      API_KEY: ${STAGING_API_KEY:?set STAGING_API_KEY}
+      LOG_LEVEL: INFO
+      DB_PATH: /data/expenses.db
+    ports:
+      - "8001:8000"
+    volumes:
+      - staging-data:/data
+    restart: unless-stopped
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "5"}
+volumes:
+  staging-data:
