@@ -32,10 +32,13 @@ jobs:
     environment: staging
     steps:
       - uses: actions/checkout@v4
+      - name: Read release version
+        id: ver
+        run: echo "version=$(sed -n 's/^__version__ = "\(.*\)"/\1/p' src/expense_tracker/__init__.py)" >> "$GITHUB_OUTPUT"
       - name: Trigger staging deploy (Render deploy hook)
         run: curl -fsS -X POST "${{ secrets.STAGING_DEPLOY_HOOK }}"
-      - name: Smoke test staging
-        run: python3 scripts/smoke_test.py "${{ secrets.STAGING_URL }}" --api-key "${{ secrets.STAGING_API_KEY }}" --wait 300
+      - name: Smoke test staging (waits until the new version is live)
+        run: python3 scripts/smoke_test.py "${{ secrets.STAGING_URL }}" --api-key "${{ secrets.STAGING_API_KEY }}" --wait 600 --expect-version "${{ steps.ver.outputs.version }}"
 
   deploy-production:
     if: github.ref_name == 'main'
@@ -44,12 +47,15 @@ jobs:
     environment: production        # add "required reviewers" to this environment for a manual approval gate
     steps:
       - uses: actions/checkout@v4
-      - name: Verify staging is healthy before touching production
-        run: python3 scripts/smoke_test.py "${{ secrets.STAGING_URL }}" --api-key "${{ secrets.STAGING_API_KEY }}" --wait 300
+      - name: Read release version
+        id: ver
+        run: echo "version=$(sed -n 's/^__version__ = "\(.*\)"/\1/p' src/expense_tracker/__init__.py)" >> "$GITHUB_OUTPUT"
+      - name: Verify staging runs this exact version before touching production
+        run: python3 scripts/smoke_test.py "${{ secrets.STAGING_URL }}" --api-key "${{ secrets.STAGING_API_KEY }}" --wait 300 --expect-version "${{ steps.ver.outputs.version }}"
       - name: Trigger production deploy (Render deploy hook)
         run: curl -fsS -X POST "${{ secrets.PRODUCTION_DEPLOY_HOOK }}"
-      - name: Smoke test production
-        run: python3 scripts/smoke_test.py "${{ secrets.PRODUCTION_URL }}" --api-key "${{ secrets.PRODUCTION_API_KEY }}" --wait 300
+      - name: Smoke test production (waits until the new version is live)
+        run: python3 scripts/smoke_test.py "${{ secrets.PRODUCTION_URL }}" --api-key "${{ secrets.PRODUCTION_API_KEY }}" --wait 600 --expect-version "${{ steps.ver.outputs.version }}"
       - name: Report failure (rollback instructions)
         if: failure()
         run: |

@@ -21,6 +21,8 @@ class Settings:
     log_level: str = "INFO"
     api_key: str = ""
     max_body_bytes: int = 10_000
+    rate_limit_fails: int = 10
+    rate_limit_window: int = 60
 
     @property
     def auth_enabled(self) -> bool:
@@ -35,6 +37,8 @@ class Settings:
             log_level=env.get("LOG_LEVEL", "INFO").strip().upper(),
             api_key=env.get("API_KEY", "").strip(),
             max_body_bytes=_int(env.get("MAX_BODY_BYTES", "10000"), "MAX_BODY_BYTES"),
+            rate_limit_fails=_int(env.get("RATE_LIMIT_FAILS", "10"), "RATE_LIMIT_FAILS"),
+            rate_limit_window=_int(env.get("RATE_LIMIT_WINDOW", "60"), "RATE_LIMIT_WINDOW"),
         )
         settings.validate()
         return settings
@@ -48,6 +52,8 @@ class Settings:
             raise ConfigError("DB_PATH must not be empty")
         if self.max_body_bytes < 100:
             raise ConfigError("MAX_BODY_BYTES must be at least 100")
+        if self.rate_limit_fails < 1 or self.rate_limit_window < 1:
+            raise ConfigError("RATE_LIMIT_FAILS and RATE_LIMIT_WINDOW must be at least 1")
         if self.environment in ("staging", "production") and len(self.api_key) < MIN_API_KEY_LENGTH:
             raise ConfigError(
                 f"API_KEY must be set and at least {MIN_API_KEY_LENGTH} characters when "

@@ -12,6 +12,15 @@ Found by exploratory testing and edge-case analysis. Every bug is fixed and has 
 | BUG-006 | Low | `update 1` (no options) | Printed "Updated #1" although nothing changed | Error explaining what to provide | No check that at least one field was given | Raise `ValidationError` | REG-06 |
 | BUG-007 | Low | `list --start 2026-12-01 --end 2026-01-01` | "No expenses found." (misleading) | Error: start after end | Reversed ranges not validated | `_check_range()` helper | REG-07 |
 
+## Capstone phase (final security audit and UI testing)
+| ID | Severity | Found by | Problem | Fix | Regression test |
+|---|---|---|---|---|---|
+| BUG-008 | High (security) | Final security audit of the Phase 3 export | CSV export wrote text beginning with `=`, `+`, `-`, `@` as live spreadsheet formulas (formula injection) | `csv_safe()` prefixes such cells with an apostrophe | REG-08, SV-07, WT-23 |
+| BUG-009 | Medium | API review | `GET /api/expenses` returned every row (unbounded response, a 21.5 MB payload at 200,000 rows) | Pagination: default 100, maximum 500 | REG-09, SV-01, WT-16, WT-17 |
+| BUG-010 | Medium | Browser-level UI check (jsdom against a live server) | Race condition: after quickly changing the month, a slow older response overwrote the newer one, so the dashboard showed the wrong month; late responses could also draw after sign-out | Per-view request counters; stale responses are ignored; sign-out invalidates in-flight requests | UI check (top-category and meter checks), reproduced then fixed |
+
+Also during development: the new rate limiter made the old WT-02 test (15 wrong-key requests in a row) fail with 429. This was correct behaviour, so the test was changed to use a high limit, and the limiter got its own tests (RL-01 to RL-07). A benchmark showed that a single GROUP BY query for the yearly chart was slower than 12 indexed lookups (158 ms vs 95 ms); the design was changed after measuring (see docs/CODE_REVIEW.md).
+
 ## Debugging approach
 1. Reproduce the failure with the exact command.
 2. Read the traceback from the bottom up to find the failing line.

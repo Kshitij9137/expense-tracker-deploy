@@ -1,7 +1,7 @@
 # Test Results
 
-Generated: 2026-10-28  
-Total: 89  |  Passed: 89  |  Failed: 0  |  Time: 0.96s
+Generated: 2026-11-05  
+Total: 124  |  Passed: 124  |  Failed: 0  |  Time: 1.53s
 
 | ID | Test case | Result | File |
 |---|---|---|---|
@@ -54,12 +54,37 @@ Total: 89  |  Passed: 89  |  Failed: 0  |  Time: 0.96s
 | REG-05 | BUG-005: export to a missing folder showed a traceback | PASS | test_regression.py |
 | REG-06 | BUG-006: update with no fields printed 'Updated' although nothing changed | PASS | test_regression.py |
 | REG-07 | BUG-007: start date after end date silently returned 'No expenses found' | PASS | test_regression.py |
+| REG-08 | BUG-008: CSV export wrote =formulas as live spreadsheet formulas (found in final security audit) | PASS | test_capstone.py |
+| REG-09 | BUG-009: GET /api/expenses returned every row (unbounded response); now capped at 500 per page | PASS | test_capstone.py |
+| RL-01 | After N failed key attempts further requests get 429 with Retry-After | PASS | test_capstone.py |
+| RL-02 | While locked out even the right key is refused; after the window it works again | PASS | test_capstone.py |
+| RL-03 | Limit is per client address; /health and the dashboard are never rate limited | PASS | test_capstone.py |
+| RL-04 | Successful requests never trigger the limiter | PASS | test_capstone.py |
+| RL-05 | RateLimiter sliding window works and forgets old clients | PASS | test_capstone.py |
+| RL-06 | Client address is the rightmost X-Forwarded-For entry (cannot be spoofed by the client) | PASS | test_capstone.py |
+| RL-07 | Rate limit settings are read from the environment and validated | PASS | test_capstone.py |
+| SC-01 | GET / serves the dashboard without a key, with a strict Content-Security-Policy | PASS | test_capstone.py |
+| SC-02 | app.js and app.css are served publicly with the right content types | PASS | test_capstone.py |
+| SC-03 | Only whitelisted static paths exist; traversal and unknown files return 404 | PASS | test_capstone.py |
+| SC-04 | index.html has no inline scripts, inline styles or inline event handlers (CSP-safe) | PASS | test_capstone.py |
+| SC-05 | app.js never uses innerHTML, eval, document.write or localStorage (XSS and key-storage lint) | PASS | test_capstone.py |
+| SC-06 | Dashboard declares language, viewport, labelled inputs and a live status region | PASS | test_capstone.py |
+| SC-07 | API responses are no-store; static files use no-cache so deployments show immediately | PASS | test_capstone.py |
 | ST-01 | --help and --version work and exit with code 0 | PASS | test_system.py |
 | ST-02 | Running with no command prints usage and exits non-zero | PASS | test_system.py |
 | ST-03 | Data saved by one process is visible to the next process | PASS | test_system.py |
 | ST-04 | Add expenses, export to CSV, and verify the CSV file | PASS | test_system.py |
 | ST-05 | Errors are written to stderr, nothing on stdout, exit code 1 | PASS | test_system.py |
 | ST-06 | Different --db files do not share data | PASS | test_system.py |
+| SV-01 | list_expenses supports limit/offset and count_expenses gives the full total | PASS | test_capstone.py |
+| SV-02 | monthly_totals returns 12 values for a year in one query | PASS | test_capstone.py |
+| SV-03 | Month queries include the first and last day and exclude neighbours (incl. December) | PASS | test_capstone.py |
+| SV-04 | insights: total, change vs previous month, top category, largest, daily average | PASS | test_capstone.py |
+| SV-05 | insights handle an empty month, no previous month, and January -> previous December | PASS | test_capstone.py |
+| SV-06 | Budgets can be deleted; deleting or reading a missing budget raises KeyError | PASS | test_capstone.py |
+| SV-07 | CSV cells that start with = + - @ are prefixed so spreadsheets treat them as text | PASS | test_capstone.py |
+| SV-08 | CSV export quotes commas, quotes and newlines correctly and round-trips | PASS | test_capstone.py |
+| SV-09 | One shared date filter behaves identically for list, count and totals | PASS | test_capstone.py |
 | UAT-01 | As a student, I log a week of spending and see where my money went | PASS | test_uat.py |
 | UAT-02 | As a user, I get a clear warning when I overspend a budget | PASS | test_uat.py |
 | UAT-03 | As a user, I can correct a wrongly entered amount and category | PASS | test_uat.py |
@@ -94,3 +119,13 @@ Total: 89  |  Passed: 89  |  Failed: 0  |  Time: 0.96s
 | WT-13 | Data survives an application restart (new app instance, same database file) | PASS | test_web.py |
 | WT-14 | Each request is logged as one JSON line with request id, status and duration | PASS | test_web.py |
 | WT-15 | In development without a key the API is open (with a logged warning) | PASS | test_web.py |
+| WT-16 | GET /api/expenses paginates and reports total, limit and offset | PASS | test_capstone.py |
+| WT-17 | Invalid limit/offset values return 400 | PASS | test_capstone.py |
+| WT-18 | PUT /api/expenses/<id> updates fields; empty body and bad values are rejected | PASS | test_capstone.py |
+| WT-19 | Budgets: set, list with progress, over-budget flag, delete | PASS | test_capstone.py |
+| WT-20 | Budget limit and month are validated | PASS | test_capstone.py |
+| WT-21 | GET /api/monthly returns 12 months and a yearly total | PASS | test_capstone.py |
+| WT-22 | GET /api/insights formats money and includes the top category and largest expense | PASS | test_capstone.py |
+| WT-23 | GET /api/export.csv downloads a CSV file with safe cells | PASS | test_capstone.py |
+| WT-24 | Wrong methods return 405 with an Allow header | PASS | test_capstone.py |
+| WT-25 | Every new API endpoint requires the key | PASS | test_capstone.py |

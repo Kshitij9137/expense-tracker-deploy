@@ -31,6 +31,8 @@ No secret is ever stored in Git. Copy `.env.example` for local use.
 | `PORT` | 8000 | Port gunicorn listens on (Render sets this automatically) |
 | `WEB_CONCURRENCY` | 2 | Number of gunicorn worker processes |
 | `MAX_BODY_BYTES` | 10000 | Maximum request body size |
+| `RATE_LIMIT_FAILS` | 10 | Failed key attempts allowed per client address per window (per worker process) |
+| `RATE_LIMIT_WINDOW` | 60 | Rate-limit window in seconds |
 
 The application **fails fast**: with a missing or weak key in staging/production it exits with code 3 and the message `CONFIGURATION ERROR: ...` instead of running insecurely.
 
@@ -72,14 +74,18 @@ Put a reverse proxy (Caddy or nginx) in front for HTTPS, and never expose ports 
 ```bash
 python scripts/smoke_test.py https://<service>.onrender.com --api-key <KEY> --wait 90
 ```
+Add `--expect-version 2.0.0` to wait until `/health` reports that version (the pipeline does this automatically, reading the version from `src/expense_tracker/__init__.py`), so the test can never pass against the old release while the new one is still building.
 Checks: health, auth rejects missing and wrong keys, create / list / delete round trip, validation returns 400, metrics available. Exit code 0 = pass.
+
+## 7a. The dashboard
+After deployment, open the service URL in a browser (`https://<service>.onrender.com/`) and sign in with that environment's API key. The page and its script are public files; all data comes from the key-protected API. Full API list: `docs/SPECIFICATION.md`.
 
 ## 8. API quick reference
 | Method and path | Auth | Purpose |
 |---|---|---|
 | `GET /health` | no | Liveness and database check |
 | `GET /metrics` | key | Prometheus-style metrics |
-| `GET /api/expenses?category=&start=&end=` | key | List |
+| `GET /api/expenses?category=&start=&end=&limit=&offset=` | key | List (paginated, default 100, max 500) |
 | `POST /api/expenses` | key | Create. JSON: `amount`, `category`, `date` (optional), `note` (optional) |
 | `GET /api/expenses/<id>` | key | Fetch one |
 | `DELETE /api/expenses/<id>` | key | Delete |

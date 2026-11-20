@@ -36,6 +36,8 @@ Passwords and API keys are never logged.
 | Container exits immediately; log says `CONFIGURATION ERROR` | Missing or short `API_KEY`, bad `APP_ENV` | Fix the environment variable and redeploy |
 | `/health` returns 503 or 500 | Database file missing, unwritable or corrupt | Check the volume/permissions; run `python -m expense_tracker.ops check --db /data/expenses.db`; restore a backup |
 | All API calls return 401 | Wrong or missing `X-API-Key` header | Check the key in the client and in the service settings |
+| Dashboard says "Too many failed attempts" (HTTP 429) | Wrong key tried repeatedly; limiter active | Wait for `Retry-After` seconds; use the correct key; check logs for `"status":429` to see if it is an attack |
+| Dashboard shows an old month's data | Browser cache of an old script | Hard refresh (Ctrl+Shift+R); static files are served with `no-cache` |
 | 413 on POST | Body larger than `MAX_BODY_BYTES` | Send less data or raise the limit |
 | `database is locked` in logs | Heavy concurrent writes | Reduce workers or move to PostgreSQL; WAL and a 10 s timeout are already enabled |
 | Slow first request on Render | Free service was asleep | Expected; use an uptime monitor or a paid plan |

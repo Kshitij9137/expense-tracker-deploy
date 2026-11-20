@@ -22,7 +22,7 @@ class WebBase(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.db = os.path.join(self.tmp.name, "web.db")
-        self.app = create_app(Settings("staging", self.db, "ERROR", KEY, 1000))
+        self.app = create_app(Settings("staging", self.db, "ERROR", KEY, 1000, 100000, 60))
 
     def tearDown(self):
         self.tmp.cleanup()

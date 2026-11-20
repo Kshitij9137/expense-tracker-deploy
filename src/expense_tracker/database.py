@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS budgets (
     category     TEXT PRIMARY KEY,
     limit_cents  INTEGER NOT NULL CHECK (limit_cents > 0)
 );
-CREATE INDEX IF NOT EXISTS idx_expenses_date     ON expenses (spent_on);
+-- Covering index: date-range totals are answered from the index alone, without reading table rows.
+CREATE INDEX IF NOT EXISTS idx_expenses_date_amount ON expenses (spent_on, amount_cents);
 CREATE INDEX IF NOT EXISTS idx_expenses_category ON expenses (category);
 """
 

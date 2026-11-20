@@ -65,3 +65,16 @@ python tools/generate_test_report.py                    # refresh docs/TEST_RESU
 
 Total is now **89 tests, all passing; branch coverage 94%** (`wsgi.py`, `__main__.py` and the development server `main()` run in separate processes and are verified by the smoke test and CF-05 instead). The CI pipeline fails below 90% coverage.
 Post-deployment verification is automated by `scripts/smoke_test.py`; load behaviour by `scripts/loadtest.py`.
+
+## 10. Capstone additions (v2.0.0)
+| Level | Prefix | File | Count |
+|---|---|---|---|
+| Service features | SV | `tests/test_capstone.py` | 9 |
+| API (new endpoints) | WT-16 to WT-25 | `tests/test_capstone.py` | 10 |
+| Rate limiting | RL | `tests/test_capstone.py` | 7 |
+| Dashboard assets and security | SC | `tests/test_capstone.py` | 7 |
+| Regression | REG-08, REG-09 | `tests/test_capstone.py` | 2 |
+| Browser-level UI check | (29 checks) | `tools/ui/ui_check.js` | 29 |
+
+**Totals: 124 automated Python tests (all pass, 95% branch coverage) plus 29 browser-level UI checks (all pass).**
+The UI check loads the real page from a running server in jsdom and clicks through sign-in, dashboard, paging, filtering, add, edit, delete, budgets, export, hostile text and sign-out.

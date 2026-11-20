@@ -52,43 +52,64 @@ def build_parser() -> argparse.ArgumentParser:
     return p
 
 
+# ---- command handlers: one small function per command (dispatch table below) ----------------
+def _add(svc, args, out):
+    e = svc.add_expense(args.amount, args.category, args.date, args.note)
+    print(f"Added #{e.id}: {format_money(e.amount_cents)} on {e.category} ({e.spent_on})", file=out)
+
+
+def _list(svc, args, out):
+    rows = svc.list_expenses(args.category, args.start, args.end)
+    if not rows:
+        print("No expenses found.", file=out)
+    for e in rows:
+        print(f"#{e.id:<3} {e.spent_on}  {e.category:<12} {format_money(e.amount_cents):>10}  {e.description}", file=out)
+
+
+def _update(svc, args, out):
+    e = svc.update_expense(args.id, args.amount, args.category, args.date, args.note)
+    print(f"Updated #{e.id}", file=out)
+
+
+def _delete(svc, args, out):
+    svc.delete_expense(args.id)
+    print(f"Deleted #{args.id}", file=out)
+
+
+def _summary(svc, args, out):
+    totals = svc.total_by_category(args.start, args.end)
+    for cat, total in totals.items():
+        print(f"{cat:<12} {format_money(total):>10}", file=out)
+    print(f"{'TOTAL':<12} {format_money(sum(totals.values())):>10}", file=out)
+
+
+def _budget(svc, args, out):
+    svc.set_budget(args.category, args.limit)
+    print(f"Budget for {args.category.strip().lower()} set to {args.limit}", file=out)
+
+
+def _status(svc, args, out):
+    year, month = parse_month(args.month)
+    for row in svc.budget_status(year, month):
+        flag = "OVER BUDGET" if row["over"] else "ok"
+        print(f"{row['category']:<12} {format_money(row['spent']):>10} / {format_money(row['limit']):>10}  {flag}", file=out)
+
+
+def _export(svc, args, out):
+    n = svc.export_csv(args.path)
+    print(f"Exported {n} expenses to {args.path}", file=out)
+
+
+COMMANDS = {"add": _add, "list": _list, "update": _update, "delete": _delete, "summary": _summary,
+            "budget": _budget, "status": _status, "export": _export}
+
+
 def run(argv=None, out=None) -> int:
     out = out or sys.stdout
     args = build_parser().parse_args(argv)
     conn = connect(args.db)
-    svc = ExpenseService(conn)
     try:
-        if args.command == "add":
-            e = svc.add_expense(args.amount, args.category, args.date, args.note)
-            print(f"Added #{e.id}: {format_money(e.amount_cents)} on {e.category} ({e.spent_on})", file=out)
-        elif args.command == "list":
-            rows = svc.list_expenses(args.category, args.start, args.end)
-            if not rows:
-                print("No expenses found.", file=out)
-            for e in rows:
-                print(f"#{e.id:<3} {e.spent_on}  {e.category:<12} {format_money(e.amount_cents):>10}  {e.description}", file=out)
-        elif args.command == "update":
-            e = svc.update_expense(args.id, args.amount, args.category, args.date, args.note)
-            print(f"Updated #{e.id}", file=out)
-        elif args.command == "delete":
-            svc.delete_expense(args.id)
-            print(f"Deleted #{args.id}", file=out)
-        elif args.command == "summary":
-            totals = svc.total_by_category(args.start, args.end)
-            for cat, total in totals.items():
-                print(f"{cat:<12} {format_money(total):>10}", file=out)
-            print(f"{'TOTAL':<12} {format_money(sum(totals.values())):>10}", file=out)
-        elif args.command == "budget":
-            svc.set_budget(args.category, args.limit)
-            print(f"Budget for {args.category.strip().lower()} set to {args.limit}", file=out)
-        elif args.command == "status":
-            year, month = parse_month(args.month)
-            for row in svc.budget_status(year, month):
-                flag = "OVER BUDGET" if row["over"] else "ok"
-                print(f"{row['category']:<12} {format_money(row['spent']):>10} / {format_money(row['limit']):>10}  {flag}", file=out)
-        elif args.command == "export":
-            n = svc.export_csv(args.path)
-            print(f"Exported {n} expenses to {args.path}", file=out)
+        COMMANDS[args.command](ExpenseService(conn), args, out)
         return 0
     except (ValidationError, KeyError) as exc:
         print(f"Error: {exc.args[0]}", file=sys.stderr)

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Expense Tracker</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Expense Tracker</h1>
+    <div class="topbar-actions" id="session-actions" hidden>
+      <label for="month">Month</label>
+      <input type="month" id="month">
+      <button type="button" id="export" class="secondary">Export CSV</button>
+      <button type="button" id="logout" class="secondary">Sign out</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="login" class="card narrow" aria-labelledby="login-title">
+      <h2 id="login-title">Sign in</h2>
+      <p class="muted">Enter your API key. It is kept only in this browser tab and is cleared when you close it.</p>
+      <div class="field">
+        <label for="apikey">API key</label>
+        <input type="password" id="apikey" autocomplete="off" required>
+      </div>
+      <button type="button" id="signin">Sign in</button>
+    </section>
+
+    <div id="app" hidden>
+      <nav class="tabs" aria-label="Sections">
+        <button type="button" class="tab active" data-tab="dashboard" aria-current="page">Dashboard</button>
+        <button type="button" class="tab" data-tab="expenses">Expenses</button>
+        <button type="button" class="tab" data-tab="budgets">Budgets</button>
+      </nav>
+
+      <section id="tab-dashboard" class="panel" aria-label="Dashboard">
+        <div class="cards" id="insight-cards"></div>
+        <div class="grid-2">
+          <div class="card">
+            <h2>Monthly spending <span id="chart-year" class="muted"></span></h2>
+            <div id="monthly-chart"></div>
+          </div>
+          <div class="card">
+            <h2>By category</h2>
+            <div id="category-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-expenses" class="panel" aria-label="Expenses" hidden>
+        <div class="card">
+          <h2 id="form-title">Add expense</h2>
+          <div class="form-grid">
+            <div class="field"><label for="f-amount">Amount</label>
+              <input type="text" id="f-amount" inputmode="decimal" placeholder="12.50"></div>
+            <div class="field"><label for="f-category">Category</label>
+              <input type="text" id="f-category" maxlength="30" placeholder="food"></div>
+            <div class="field"><label for="f-date">Date</label>
+              <input type="date" id="f-date"></div>
+            <div class="field"><label for="f-note">Note</label>
+              <input type="text" id="f-note" maxlength="200" placeholder="optional"></div>
+          </div>
+          <div class="row">
+            <button type="button" id="save">Add expense</button>
+            <button type="button" id="cancel-edit" class="secondary" hidden>Cancel edit</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>All expenses</h2>
+          <div class="form-grid filters">
+            <div class="field"><label for="q-category">Category</label>
+              <input type="text" id="q-category" placeholder="any"></div>
+            <div class="field"><label for="q-start">From</label>
+              <input type="date" id="q-start"></div>
+            <div class="field"><label for="q-end">To</label>
+              <input type="date" id="q-end"></div>
+            <div class="field actions"><button type="button" id="apply-filters" class="secondary">Apply</button>
+              <button type="button" id="clear-filters" class="secondary">Clear</button></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <caption class="sr-only">Expenses</caption>
+              <thead><tr><th scope="col">Date</th><th scope="col">Category</th><th scope="col" class="num">Amount</th>
+                <th scope="col">Note</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+              <tbody id="expense-rows"></tbody>
+            </table>
+          </div>
+          <div class="pager">
+            <button type="button" id="prev" class="secondary">Previous</button>
+            <span id="page-info" class="muted"></span>
+            <button type="button" id="next" class="secondary">Next</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-budgets" class="panel" aria-label="Budgets" hidden>
+        <div class="card">
+          <h2>Set a monthly budget</h2>
+          <div class="form-grid">
+            <div class="field"><label for="b-category">Category</label>
+              <input type="text" id="b-category" maxlength="30" placeholder="food"></div>
+            <div class="field"><label for="b-limit">Monthly limit</label>
+              <input type="text" id="b-limit" inputmode="decimal" placeholder="200"></div>
+            <div class="field actions"><button type="button" id="save-budget">Save budget</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Budget status <span id="budget-month" class="muted"></span></h2>
+          <div id="budget-list"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div id="status" class="status" role="status" aria-live="polite"></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

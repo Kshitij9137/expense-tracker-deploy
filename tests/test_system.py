@@ -28,7 +28,7 @@ class SystemTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn("usage", out.lower())
         code, out, _ = self.cli("--version")
-        self.assertEqual((code, out.strip()), (0, "1.1.0"))
+        self.assertEqual((code, out.strip()), (0, "2.0.0"))
 
     def test_st02_missing_command(self):
         """ST-02 Running with no command prints usage and exits non-zero"""

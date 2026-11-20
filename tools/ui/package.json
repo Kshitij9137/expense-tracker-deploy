@@ -1,0 +1,7 @@
+{
+  "name": "expense-tracker-ui-check",
+  "private": true,
+  "description": "Optional browser-behaviour check for the dashboard (runs it in jsdom against a live server).",
+  "scripts": { "check": "node ui_check.js" },
+  "devDependencies": { "jsdom": "^24.0.0" }
+}

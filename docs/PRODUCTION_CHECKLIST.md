@@ -15,6 +15,9 @@
 - [ ] Invalid input gives 400 (never 500)
 - [ ] Logs show JSON lines with request ids; no secrets in logs
 - [ ] `/metrics` responds; request counters increase
+- [ ] Dashboard opens, wrong key is refused, right key signs in; add, edit, delete, budget and export work in a real browser
+- [ ] Browser developer tools show no console errors and no blocked (CSP) requests
+- [ ] Rate limit tested: repeated wrong keys give 429
 - [ ] Backup and restore tested on staging data
 - [ ] Load test run (`scripts/loadtest.py`): no server errors, acceptable latency
 - [ ] Restart test: data survives a container restart (on a persistent volume)
